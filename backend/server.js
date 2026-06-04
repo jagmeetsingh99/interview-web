@@ -12,9 +12,13 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Update this if your frontend runs on a different port
-  credentials: true,
-}));
+    origin: [
+        "http://localhost:5173",
+        "https://interview-web-i92x.vercel.app",
+        /\.vercel\.app$/  // ✅ allows all vercel preview URLs
+    ],
+    credentials: true
+}))
 app.use(express.json());
 app.use(cookieParser());
 // Routes
