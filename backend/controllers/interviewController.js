@@ -13,7 +13,7 @@ async function generateInterViewReportController(req, res) {
         }
 
         const parser = new PDFParse()
-        const resumeContent = await parser.parseBuffer(req.file.buffer)
+        const resumeContent = await parser.pdf(req.file.buffer)
 
         const interViewReportByAi = await generateInterviewReport({
             resume: resumeContent.text,
