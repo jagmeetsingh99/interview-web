@@ -1,5 +1,5 @@
-const pdf = require("pdf-parse")
-const pdfParse = pdf.default || pdf
+const pdfParseLib = require("pdf-parse")
+const pdfParse = typeof pdfParseLib === "function" ? pdfParseLib : pdfParseLib.default || Object.values(pdfParseLib).find(v => typeof v === "function")
 const { generateInterviewReport, generateResumePdf } = require("../services/ai.service")
 const interviewReportModel = require("../models/interview.model")
 
@@ -13,19 +13,14 @@ async function generateInterViewReportController(req, res) {
             return res.status(400).json({ message: "selfDescription and jobDescription are required." })
         }
 
-        console.log("=== PARSING PDF ===")
         const resumeContent = await pdfParse(req.file.buffer)
-        console.log("=== PDF PARSED ===", resumeContent.text.slice(0, 100))
 
-        console.log("=== CALLING AI ===")
         const interViewReportByAi = await generateInterviewReport({
             resume: resumeContent.text,
             selfDescription,
             jobDescription
         })
-        console.log("=== AI DONE ===")
 
-        console.log("=== SAVING TO DB ===")
         const interviewReport = await interviewReportModel.create({
             user: req.user.id,
             resume: resumeContent.text,
@@ -33,16 +28,13 @@ async function generateInterViewReportController(req, res) {
             jobDescription,
             ...interViewReportByAi
         })
-        console.log("=== DB SAVED ===")
 
         res.status(201).json({
             message: "Interview report generated successfully.",
             interviewReport
         })
     } catch (err) {
-        console.error("=== CONTROLLER ERROR ===")
-        console.error("Message:", err.message)
-        console.error("Stack:", err.stack)
+        console.error("=== CONTROLLER ERROR ===", err.message)
         res.status(500).json({ message: "Internal server error.", error: err.message })
     }
 }
