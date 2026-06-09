@@ -30,6 +30,16 @@ const interviewReportSchema = z.object({
     })),
 })
 
+function extractText(response) {
+    // Handle different response shapes across SDK versions
+    if (typeof response.text === "string") return response.text
+    if (typeof response.text === "function") return response.text()
+    const candidate = response?.candidates?.[0]
+    const parts = candidate?.content?.parts
+    if (parts && parts.length > 0) return parts[0].text
+    throw new Error("Could not extract text from AI response: " + JSON.stringify(response).slice(0, 300))
+}
+
 function safeParseJson(text) {
     if (!text || typeof text !== "string") {
         throw new Error("Empty or invalid response from AI model")
@@ -94,7 +104,10 @@ Return only valid JSON. No markdown, no explanation.`
         })
     )
 
-    const parsed = safeParseJson(response.text)
+    const text = extractText(response)
+    console.log("=== AI RAW TEXT ===", text.slice(0, 200))
+
+    const parsed = safeParseJson(text)
     const result = interviewReportSchema.safeParse(parsed)
     if (!result.success) {
         throw new Error(`AI response failed schema validation: ${JSON.stringify(result.error.errors, null, 2)}`)
@@ -113,7 +126,7 @@ async function generatePdfFromHtml(htmlContent) {
         await page.setContent(htmlContent, { waitUntil: "networkidle0" })
         const pdfBuffer = await page.pdf({
             format: "A4",
-            printBackground: true,   // ✅ required for background colors to render
+            printBackground: true,
             margin: { top: "0mm", bottom: "0mm", left: "0mm", right: "0mm" }
         })
         return pdfBuffer
@@ -177,7 +190,8 @@ TECHNICAL REQUIREMENTS:
         })
     )
 
-    const parsed = safeParseJson(response.text)
+    const text = extractText(response)
+    const parsed = safeParseJson(text)
     const resumeSchema = z.object({ html: z.string() })
     const result = resumeSchema.safeParse(parsed)
     if (!result.success) {
