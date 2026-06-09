@@ -31,7 +31,6 @@ const interviewReportSchema = z.object({
 })
 
 function extractText(response) {
-    // Handle different response shapes across SDK versions
     if (typeof response.text === "string") return response.text
     if (typeof response.text === "function") return response.text()
     const candidate = response?.candidates?.[0]
@@ -105,12 +104,14 @@ Return only valid JSON. No markdown, no explanation.`
     )
 
     const text = extractText(response)
-    console.log("=== AI RAW TEXT ===", text.slice(0, 200))
+    console.log("=== AI RAW TEXT ===", text.slice(0, 500))
 
     const parsed = safeParseJson(text)
+    console.log("=== PARSED ===", JSON.stringify(parsed).slice(0, 500))
+
     const result = interviewReportSchema.safeParse(parsed)
     if (!result.success) {
-        throw new Error(`AI response failed schema validation: ${JSON.stringify(result.error.errors, null, 2)}`)
+        throw new Error(`AI response failed schema validation: ${JSON.stringify(result.error.issues, null, 2)}`)
     }
     return result.data
 }
