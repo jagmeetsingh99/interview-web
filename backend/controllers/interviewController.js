@@ -1,11 +1,7 @@
-const _pdfParse = require("pdf-parse")
-console.log("type:", typeof _pdfParse)
-console.log("keys:", Object.keys(_pdfParse))
-console.log("default:", typeof _pdfParse.default)
-const pdfParse = typeof _pdfParse === "function" ? _pdfParse : _pdfParse.default
+const { PDFParse } = require("pdf-parse")
 const { generateInterviewReport, generateResumePdf } = require("../services/ai.service")
 const interviewReportModel = require("../models/interview.model")
-// console.log("pdf-parse exports:", typeof pdfParseLib, Object.keys(pdfParseLib))
+
 async function generateInterViewReportController(req, res) {
     try {
         if (!req.file) {
@@ -16,8 +12,10 @@ async function generateInterViewReportController(req, res) {
             return res.status(400).json({ message: "selfDescription and jobDescription are required." })
         }
 
-        const resumeContent = await pdfParse(req.file.buffer)
+        const parser = new PDFParse()
+        const resumeContent = await parser.parseBuffer(req.file.buffer)
 
+        // rest stays the same...
         const interViewReportByAi = await generateInterviewReport({
             resume: resumeContent.text,
             selfDescription,
