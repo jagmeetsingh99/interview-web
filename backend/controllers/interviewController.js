@@ -1,5 +1,5 @@
-const pdfParseLib = require("pdf-parse")
-const pdfParse = typeof pdfParseLib === "function" ? pdfParseLib : pdfParseLib.default || Object.values(pdfParseLib).find(v => typeof v === "function")
+const _pdfParse = require("pdf-parse")
+const pdfParse = typeof _pdfParse === "function" ? _pdfParse : _pdfParse.default
 const { generateInterviewReport, generateResumePdf } = require("../services/ai.service")
 const interviewReportModel = require("../models/interview.model")
 console.log("pdf-parse exports:", typeof pdfParseLib, Object.keys(pdfParseLib))
