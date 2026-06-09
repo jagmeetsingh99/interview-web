@@ -24,7 +24,7 @@ const interviewReportSchema = z.object({
         severity: z.enum(["low", "medium", "high"])
     })),
     preparationPlan: z.array(z.object({
-        day: z.number(),
+        day: z.coerce.number(),  // ✅ coerces "1" → 1
         focus: z.string(),
         tasks: z.array(z.string())
     })),
@@ -97,18 +97,14 @@ Analyze the candidate's resume and job description, then return a JSON object wi
 - technicalQuestions: array of { question, intention, answer }
 - behavioralQuestions: array of { question, intention, answer }
 - skillGaps: array of { skill, severity } where severity is "low" | "medium" | "high"
-- preparationPlan: array of { day, focus, tasks } where tasks is an array of strings
+- preparationPlan: array of { day, focus, tasks } where tasks is an array of strings, day must be an integer number not a string
 Return only valid JSON. No markdown, no explanation.`
             }
         })
     )
 
     const text = extractText(response)
-    console.log("=== AI RAW TEXT ===", text.slice(0, 500))
-
     const parsed = safeParseJson(text)
-    console.log("=== PARSED ===", JSON.stringify(parsed).slice(0, 500))
-
     const result = interviewReportSchema.safeParse(parsed)
     if (!result.success) {
         throw new Error(`AI response failed schema validation: ${JSON.stringify(result.error.issues, null, 2)}`)
