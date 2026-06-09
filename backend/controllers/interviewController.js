@@ -2,7 +2,7 @@ const _pdfParse = require("pdf-parse")
 const pdfParse = typeof _pdfParse === "function" ? _pdfParse : _pdfParse.default
 const { generateInterviewReport, generateResumePdf } = require("../services/ai.service")
 const interviewReportModel = require("../models/interview.model")
-console.log("pdf-parse exports:", typeof pdfParseLib, Object.keys(pdfParseLib))
+// console.log("pdf-parse exports:", typeof pdfParseLib, Object.keys(pdfParseLib))
 async function generateInterViewReportController(req, res) {
     try {
         if (!req.file) {
