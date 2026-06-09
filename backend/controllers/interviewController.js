@@ -1,4 +1,5 @@
-const pdfParse = require("pdf-parse")
+// const pdfParse = require("pdf-parse")
+const pdfParse = require("pdf-parse/lib/pdf-parse.js")
 const { generateInterviewReport, generateResumePdf } = require("../services/ai.service")
 const interviewReportModel = require("../models/interview.model")
 
@@ -12,14 +13,19 @@ async function generateInterViewReportController(req, res) {
             return res.status(400).json({ message: "selfDescription and jobDescription are required." })
         }
 
+        console.log("=== PARSING PDF ===")
         const resumeContent = await pdfParse(req.file.buffer)
+        console.log("=== PDF PARSED ===", resumeContent.text.slice(0, 100))
 
+        console.log("=== CALLING AI ===")
         const interViewReportByAi = await generateInterviewReport({
             resume: resumeContent.text,
             selfDescription,
             jobDescription
         })
+        console.log("=== AI DONE ===")
 
+        console.log("=== SAVING TO DB ===")
         const interviewReport = await interviewReportModel.create({
             user: req.user.id,
             resume: resumeContent.text,
@@ -27,13 +33,16 @@ async function generateInterViewReportController(req, res) {
             jobDescription,
             ...interViewReportByAi
         })
+        console.log("=== DB SAVED ===")
 
         res.status(201).json({
             message: "Interview report generated successfully.",
             interviewReport
         })
     } catch (err) {
-        console.error("generateInterViewReportController:", err)
+        console.error("=== CONTROLLER ERROR ===")
+        console.error("Message:", err.message)
+        console.error("Stack:", err.stack)
         res.status(500).json({ message: "Internal server error.", error: err.message })
     }
 }
@@ -50,7 +59,7 @@ async function getInterviewReportByIdController(req, res) {
             interviewReport
         })
     } catch (err) {
-        console.error("getInterviewReportByIdController:", err)
+        console.error("getInterviewReportByIdController:", err.message)
         res.status(500).json({ message: "Internal server error.", error: err.message })
     }
 }
@@ -67,7 +76,7 @@ async function getAllInterviewReportsController(req, res) {
             interviewReports
         })
     } catch (err) {
-        console.error("getAllInterviewReportsController:", err)
+        console.error("getAllInterviewReportsController:", err.message)
         res.status(500).json({ message: "Internal server error.", error: err.message })
     }
 }
@@ -89,7 +98,7 @@ async function generateResumePdfController(req, res) {
         })
         res.send(pdfBuffer)
     } catch (err) {
-        console.error("generateResumePdfController:", err)
+        console.error("generateResumePdfController:", err.message)
         res.status(500).json({ message: "Internal server error.", error: err.message })
     }
 }
