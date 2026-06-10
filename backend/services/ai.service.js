@@ -24,7 +24,7 @@ const interviewReportSchema = z.object({
         severity: z.enum(["low", "medium", "high"])
     })),
     preparationPlan: z.array(z.object({
-        day: z.coerce.number(),  // ✅ coerces "1" → 1
+        day: z.coerce.number(),
         focus: z.string(),
         tasks: z.array(z.string())
     })),
@@ -117,7 +117,13 @@ async function generatePdfFromHtml(htmlContent) {
     try {
         browser = await puppeteer.launch({
             headless: true,
-            args: ["--no-sandbox", "--disable-setuid-sandbox"]
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH ||
+                "/opt/render/.cache/puppeteer/chrome/linux-148.0.7778.167/chrome-linux64/chrome",
+            args: [
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage"
+            ]
         })
         const page = await browser.newPage()
         await page.setContent(htmlContent, { waitUntil: "networkidle0" })
