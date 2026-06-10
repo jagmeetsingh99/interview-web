@@ -7,7 +7,6 @@ const { execSync } = require("child_process")
 
 connectDB();
 
-// Log Chrome path on startup
 try {
     const chromePath = execSync("find /opt/render/.cache/puppeteer -name 'chrome' -type f 2>/dev/null").toString().trim()
     console.log("=== CHROME PATH ===", chromePath)
@@ -36,6 +35,22 @@ app.use('/api/interview', require('./routes/interviewroute'));
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to the Node.js backend!' })
 });
+
+// Temporary: list available Gemini models
+app.get('/api/models', async (req, res) => {
+    try {
+        const { GoogleGenAI } = require("@google/genai")
+        const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY })
+        const result = await ai.models.list()
+        const models = []
+        for await (const model of result) {
+            models.push(model.name)
+        }
+        res.json(models)
+    } catch (err) {
+        res.status(500).json({ error: err.message })
+    }
+})
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)
