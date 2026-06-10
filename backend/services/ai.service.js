@@ -1,10 +1,34 @@
 const { GoogleGenAI } = require("@google/genai")
 const { z } = require("zod")
 const puppeteer = require("puppeteer")
+const { execSync } = require("child_process")
 
 const ai = new GoogleGenAI({
     apiKey: process.env.GOOGLE_API_KEY
 })
+
+function getChromePath() {
+    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+        return process.env.PUPPETEER_EXECUTABLE_PATH
+    }
+    try {
+        const path = execSync("find /opt/render/project -name 'chrome' -type f 2>/dev/null")
+            .toString().trim().split("\n")[0]
+        if (path) {
+            console.log("=== CHROME FOUND AT ===", path)
+            return path
+        }
+    } catch (e) {}
+    try {
+        const path = execSync("which chromium-browser || which chromium || which google-chrome 2>/dev/null")
+            .toString().trim().split("\n")[0]
+        if (path) {
+            console.log("=== SYSTEM CHROME AT ===", path)
+            return path
+        }
+    } catch (e) {}
+    return null
+}
 
 const interviewReportSchema = z.object({
     matchScore: z.number(),
@@ -81,7 +105,7 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
 
     const response = await withRetry(() =>
         ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-2.0-flash",
             contents: [{
                 role: "user",
                 parts: [{
@@ -115,16 +139,21 @@ Return only valid JSON. No markdown, no explanation.`
 async function generatePdfFromHtml(htmlContent) {
     let browser
     try {
-        browser = await puppeteer.launch({
+        const chromePath = getChromePath()
+        console.log("=== LAUNCHING CHROME AT ===", chromePath)
+
+        const launchOptions = {
             headless: true,
-            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH ||
-                "/opt/render/.cache/puppeteer/chrome/linux-148.0.7778.167/chrome-linux64/chrome",
             args: [
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage"
+                "--disable-dev-shm-usage",
+                "--disable-gpu"
             ]
-        })
+        }
+        if (chromePath) launchOptions.executablePath = chromePath
+
+        browser = await puppeteer.launch(launchOptions)
         const page = await browser.newPage()
         await page.setContent(htmlContent, { waitUntil: "networkidle0" })
         const pdfBuffer = await page.pdf({
@@ -147,7 +176,7 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
 
     const response = await withRetry(() =>
         ai.models.generateContent({
-           model: "gemini-1.5-flash-latest",
+            model: "gemini-2.0-flash",
             contents: [{
                 role: "user",
                 parts: [{
