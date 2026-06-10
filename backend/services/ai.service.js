@@ -105,7 +105,7 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
 
     const response = await withRetry(() =>
         ai.models.generateContent({
-            model: "gemini-2.0-flash",
+            model: "gemini-2.5-flash",
             contents: [{
                 role: "user",
                 parts: [{
@@ -176,7 +176,7 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
 
     const response = await withRetry(() =>
         ai.models.generateContent({
-            model: "gemini-2.0-flash",
+            model: "gemini-2.5-flash",
             contents: [{
                 role: "user",
                 parts: [{

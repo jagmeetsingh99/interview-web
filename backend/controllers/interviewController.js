@@ -1,4 +1,5 @@
-const pdfParse = require("pdf-parse")
+const pdfParseLib = require("pdf-parse")
+const pdfParse = typeof pdfParseLib === "function" ? pdfParseLib : pdfParseLib.default || Object.values(pdfParseLib).find(v => typeof v === "function")
 const { generateInterviewReport, generateResumePdf } = require("../services/ai.service")
 const interviewReportModel = require("../models/interview.model")
 
@@ -12,7 +13,6 @@ async function generateInterViewReportController(req, res) {
             return res.status(400).json({ message: "selfDescription and jobDescription are required." })
         }
 
-        
         const resumeContent = await pdfParse(req.file.buffer)
 
         const interViewReportByAi = await generateInterviewReport({
